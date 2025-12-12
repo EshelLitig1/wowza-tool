@@ -2,6 +2,26 @@ import streamlit as st
 
 st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 
+# --- SIDEBAR: REPO LINKS ---
+with st.sidebar:
+    st.header("🔗 Repository Links")
+    st.info("Quick access to configuration files:")
+    
+    st.markdown(
+        """
+        **wsc-ffmpeg-gpu-listener** [Open values.yaml ↗](https://wsc-zoomin.visualstudio.com/ZoomInCloud/_git/devops-argo?path=%2Fservices%2Fconfigurations%2Fwsc-mediaservices-prod-k8s-eus2%2Fwsc-ffmpeg-gpu-listeners%2Fvalues.yaml)
+        """
+    )
+    
+    st.markdown("---")
+    
+    st.markdown(
+        """
+        **wsc-wowza-gpu** [Open values.yaml ↗](https://wsc-zoomin.visualstudio.com/ZoomInCloud/_git/devops-argo?path=/services/configurations/wsc-mediaservices-prod-k8s-eus2/wsc-wowza-gpu/values.yaml)
+        """
+    )
+
+# --- MAIN APP ---
 st.title("🎥 FFmpeg Command Generator")
 st.markdown("Generate your FFmpeg strings quickly without managing spreadsheet rows.")
 
