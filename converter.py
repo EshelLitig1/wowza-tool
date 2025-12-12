@@ -4,8 +4,8 @@ st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 
 # --- SIDEBAR: REPO LINKS ---
 with st.sidebar:
-    st.header("🔗 Repository Links")
-    st.info("Quick access to configuration files:")
+    st.header("🔗 Reference Links")
+    st.info("Quick access to configuration files & sheets:")
     
     st.markdown(
         """
@@ -18,6 +18,14 @@ with st.sidebar:
     st.markdown(
         """
         **wsc-wowza-gpu** [Open values.yaml ↗](https://wsc-zoomin.visualstudio.com/ZoomInCloud/_git/devops-argo?path=/services/configurations/wsc-mediaservices-prod-k8s-eus2/wsc-wowza-gpu/values.yaml)
+        """
+    )
+    
+    st.markdown("---")
+    
+    st.markdown(
+        """
+        **Wowza SRT Mapping (Sheet)** [Open Google Sheet ↗](https://docs.google.com/spreadsheets/d/1WP6HVIA5zrn87n2lDK-h2Mn9MpP9bON2-WeGx-yF2X8/edit?gid=0#gid=0)
         """
     )
 
