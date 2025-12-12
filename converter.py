@@ -30,20 +30,36 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.header("1. Input Source")
-    input_host = st.text_input("Input Host/IP", value="54.156.246.82")
-    input_port = st.text_input("Input Port", value="37301")
+    input_host = st.text_input(
+        "Input Host/IP", 
+        value="54.156.246.82",
+        help="The IP address of the source stream."
+    )
+    input_port = st.text_input(
+        "Input Port", 
+        value="37301",
+        help="The port on the source server to connect to."
+    )
     
     # Latency Logic
     add_latency = st.checkbox("Add latency?", value=True)
     latency_ms = 400
     if add_latency:
-        latency_ms = st.number_input("Latency (ms)", value=400)
+        latency_ms = st.number_input(
+            "Latency (ms)", 
+            value=400,
+            help="SRT latency buffer. Higher values reduce packet loss but increase delay."
+        )
         
     # Passphrase Logic
     add_passphrase = st.checkbox("Add passphrase?", value=True)
     passphrase = ""
     if add_passphrase:
-        passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1")
+        passphrase = st.text_input(
+            "Passphrase", 
+            value="ch301_wsc_y84fmq1",
+            help="SRT connection security key."
+        )
 
 # --- COLUMN 2: ENCODING SETTINGS ---
 with col2:
@@ -56,14 +72,35 @@ with col2:
     fps_val = "30000/1001"
     
     if should_convert:
-        is_interlaced = st.checkbox("Is interlaced?", value=True)
+        is_interlaced = st.checkbox(
+            "Is interlaced?", 
+            value=True,
+            help="Check this if the source video is interlaced (e.g., 1080i) and needs deinterlacing."
+        )
         if is_interlaced:
-            yadif_mode = st.selectbox("YADIF Mode", [0, 1], index=1, help="0: keep FPS, 1: double FPS")
+            yadif_mode = st.selectbox(
+                "YADIF Mode", 
+                [0, 1], 
+                index=1, 
+                help="0: One frame for each frame (keep FPS).\n1: One frame for each field (Double FPS)."
+            )
             
         st.caption("Video Parameters")
-        maxrate = st.number_input("Maxrate (bps)", value=15000000)
-        fps_val = st.text_input("FPS Value", value="30000/1001")
-        gop_val = st.number_input("GOP Value", value=50)
+        maxrate = st.number_input(
+            "Maxrate (bps)", 
+            value=15000000,
+            help="Maximum bitrate limit for the encoder."
+        )
+        fps_val = st.text_input(
+            "FPS Value", 
+            value="30000/1001",
+            help="Frame rate fraction (e.g., 30000/1001 for 29.97 fps)."
+        )
+        gop_val = st.number_input(
+            "GOP Value", 
+            value=50,
+            help="Group of Pictures size. Determines keyframe interval."
+        )
         
         st.caption("Audio Parameters")
         audio_codec = st.text_input("Audio Codec", value="aac")
@@ -72,9 +109,22 @@ with col2:
 # --- COLUMN 3: OUTPUT TARGET ---
 with col3:
     st.header("3. Output Target")
-    wowza_server = st.number_input("Wowza Server Number", value=21, step=1)
-    wowza_port = st.number_input("Wowza Port", value=10011)
-    output_timeout = st.number_input("Output Timeout (ms)", value=10000000)
+    wowza_server = st.number_input(
+        "Wowza Server Number", 
+        value=21, 
+        step=1,
+        help="This number changes the output URL (e.g. wsc-wowza21...)"
+    )
+    wowza_port = st.number_input(
+        "Wowza Port", 
+        value=10011,
+        help="Destination port on the Wowza server."
+    )
+    output_timeout = st.number_input(
+        "Output Timeout (ms)", 
+        value=10000000,
+        help="Connection timeout for the output SRT stream."
+    )
 
 # --- GENERATE COMMAND LOGIC ---
 st.divider()
