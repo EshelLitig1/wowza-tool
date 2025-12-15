@@ -114,9 +114,25 @@ with col2:
         audio_codec = st.text_input("Audio Codec", value="aac")
         audio_bitrate = st.text_input("Audio Bitrate", value="192k")
 
-# --- COLUMN 3: OUTPUT TARGET ---
+# --- COLUMN 3: OUTPUT & CONFIG ---
 with col3:
-    st.header("3. Output Target")
+    st.header("3. Channel & Output")
+    
+    # --- NEW CHANNEL CONFIG ---
+    st.markdown("##### 📝 Channel Identity")
+    channel_name = st.text_input("Channel Name", value="nbcchannel6")
+    
+    # Static IP Checkbox
+    use_static_ip = st.checkbox(
+        "Static IP", 
+        value=True,
+        help="Check this when using whitelisting with the customer."
+    )
+    
+    st.divider()
+    
+    # --- EXISTING WOWZA CONFIG ---
+    st.markdown("##### 📡 Destination")
     wowza_server = st.number_input(
         "Wowza Server Number", 
         value=21, 
@@ -164,13 +180,18 @@ if should_convert:
     video_flags += " -map v:0 -map a:0?"
     video_flags += " -streamid 0:0x100 -streamid 1:0x101"
 
-# Final Assembly
-final_cmd = (
-    f"ffmpegcommand: -timeout 20000000 -rw_timeout 20000000 "
+# Build final FFmpeg string (Value only)
+ffmpeg_value = (
+    f"-timeout 20000000 -rw_timeout 20000000 "
     f"-i {srt_input}"
     f"{video_flags} "
     f"{output_url}"
 )
 
-st.subheader("Generated Command")
-st.code(final_cmd, language="bash")
+# Build YAML Output
+final_yaml = f"""- name: {channel_name}
+  staticip: {str(use_static_ip).lower()}
+  ffmpegcommand: {ffmpeg_value}"""
+
+st.subheader("Generated YAML Configuration")
+st.code(final_yaml, language="yaml")
