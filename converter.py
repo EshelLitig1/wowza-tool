@@ -1,22 +1,43 @@
 import streamlit as st
+import random
 
 st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 
-# --- HEADER IMAGES (Smaller & Side-by-Side) ---
-# We use columns to put them next to each other
-# I removed 'use_container_width=True' and added 'width=200'
+# --- 🎰 THE LOGO GAME ---
+st.sidebar.markdown("### 🎲 Mini Game")
+
+# 1. Define the "Winning" order
+correct_order = ["logo_top.jpg", "logo_middle.jpg", "logo_bottom.jpg"]
+
+# 2. Initialize the state (so it remembers the order)
+if "current_order" not in st.session_state:
+    st.session_state.current_order = correct_order.copy()
+
+# 3. The Spin Button
+if st.button("🎰 Spin the Logos!", help="Click to shuffle the images. Try to get them in the right order!"):
+    # Shuffle the images randomly
+    random.shuffle(st.session_state.current_order)
+    
+    # Check if they won
+    if st.session_state.current_order == correct_order:
+        st.balloons() # 🎉 CONFETTI & BALLOONS!
+        st.success("🎉 JACKPOT! The order is perfect!")
+    else:
+        st.caption("Not quite... Try again!")
+
+# 4. Display the images (Based on the shuffled order)
 img_col1, img_col2, img_col3 = st.columns(3)
 
 with img_col1:
-    st.image("logo_top.jpg", width=200)
+    st.image(st.session_state.current_order[0], width=200)
 with img_col2:
-    st.image("logo_middle.jpg", width=200)
+    st.image(st.session_state.current_order[1], width=200)
 with img_col3:
-    st.image("logo_bottom.jpg", width=200)
+    st.image(st.session_state.current_order[2], width=200)
 
 st.divider()
 
-# --- SIDEBAR: LINKS ONLY ---
+# --- SIDEBAR: LINKS ---
 with st.sidebar:
     st.header("🔗 Reference Links")
     st.info("Quick access to configuration files & sheets:")
