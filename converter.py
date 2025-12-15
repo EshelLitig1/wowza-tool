@@ -2,16 +2,17 @@ import streamlit as st
 
 st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 
-# --- HEADER IMAGES (Side by Side) ---
+# --- HEADER IMAGES (Smaller & Side-by-Side) ---
 # We use columns to put them next to each other
+# I removed 'use_container_width=True' and added 'width=200'
 img_col1, img_col2, img_col3 = st.columns(3)
 
 with img_col1:
-    st.image("logo_top.jpg", use_container_width=True)
+    st.image("logo_top.jpg", width=200)
 with img_col2:
-    st.image("logo_middle.jpg", use_container_width=True)
+    st.image("logo_middle.jpg", width=200)
 with img_col3:
-    st.image("logo_bottom.jpg", use_container_width=True)
+    st.image("logo_bottom.jpg", width=200)
 
 st.divider()
 
