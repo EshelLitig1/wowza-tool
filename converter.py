@@ -2,17 +2,16 @@ import streamlit as st
 
 st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 
-# --- SIDEBAR: IMAGES & LINKS ---
-with st.sidebar:
-    # ---------------------------------------------------------
-    # 🖼️ IMAGES SECTION
-    # Updated to use .jpg extension
-    st.image("logo_top.jpg", use_container_width=True) 
-    st.image("logo_middle.jpg", use_container_width=True)
-    st.image("logo_bottom.jpg", use_container_width=True)
-    st.divider()
-    # ---------------------------------------------------------
+# --- HEADER IMAGES (Main Page) ---
+# These now appear at the top of the page instead of the sidebar
+st.image("logo_top.jpg", use_container_width=True) 
+st.image("logo_middle.jpg", use_container_width=True)
+st.image("logo_bottom.jpg", use_container_width=True)
 
+st.divider()
+
+# --- SIDEBAR: LINKS ONLY ---
+with st.sidebar:
     st.header("🔗 Reference Links")
     st.info("Quick access to configuration files & sheets:")
     
