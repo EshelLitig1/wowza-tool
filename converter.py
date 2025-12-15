@@ -2,8 +2,17 @@ import streamlit as st
 
 st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 
-# --- SIDEBAR: REPO LINKS ---
+# --- SIDEBAR: IMAGES & LINKS ---
 with st.sidebar:
+    # ---------------------------------------------------------
+    # 🖼️ IMAGES SECTION
+    # Updated to use .jpg extension
+    st.image("logo_top.jpg", use_container_width=True) 
+    st.image("logo_middle.jpg", use_container_width=True)
+    st.image("logo_bottom.jpg", use_container_width=True)
+    st.divider()
+    # ---------------------------------------------------------
+
     st.header("🔗 Reference Links")
     st.info("Quick access to configuration files & sheets:")
     
