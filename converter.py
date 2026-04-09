@@ -46,13 +46,23 @@ with col1:
 # --- 2. ENCODING SETTINGS ---
 with col2:
     st.header("2. Encoding")
-    should_convert = st.checkbox("Convert video? (Not copy)", value=True)
+    # ADDED: Tooltip for "Convert video?"
+    should_convert = st.checkbox(
+        "Convert video? (Not copy)", 
+        value=True,
+        help="Uncheck if the video doesn't need to be converted"
+    )
     
     if should_convert:
         is_interlaced = st.checkbox("Is interlaced?", value=True)
         bwdif_mode = 1
         if is_interlaced:
-            bwdif_mode = st.selectbox("BWDIF Mode", [0, 1], index=1)
+            bwdif_mode = st.selectbox(
+                "BWDIF/YADIF Mode", 
+                options=[0, 1], 
+                index=1,
+                help="Mode 0: Standard frame rate. Mode 1: Double frame rate (smoother motion, turns 30i into 60p)."
+            )
             
         st.caption("Video Parameters")
         fps_selection = st.selectbox(
@@ -60,15 +70,17 @@ with col2:
             options=["60", "60000/1001", "30", "30000/1001", "50", "25"],
             index=3
         )
+    
+    # Audio Logic (Independent of should_convert)
+    st.divider()
+    st.caption("Audio Parameters")
+    is_multi_audio = st.checkbox("Is multi audio", value=False)
+    num_audio_tracks = 1
+    if is_multi_audio:
+        num_audio_tracks = st.number_input("Num of stereo tracks", min_value=1, value=2, step=1)
         
-        st.caption("Audio Parameters")
-        is_multi_audio = st.checkbox("Is multi audio", value=False)
-        num_audio_tracks = 1
-        if is_multi_audio:
-            num_audio_tracks = st.number_input("Num of stereo tracks", min_value=1, value=2, step=1)
-            
-        audio_codec = st.text_input("Audio Codec", value="aac")
-        audio_bitrate = st.text_input("Audio Bitrate", value="192k")
+    audio_codec = st.text_input("Audio Codec", value="aac")
+    audio_bitrate = st.text_input("Audio Bitrate", value="192k")
 
 # --- 3. OUTPUT PATH ---
 with col3:
@@ -89,60 +101,41 @@ with col3:
 st.divider()
 
 if valid_input:
-    # 1. Build SRT Input String
     srt_input = f"srt://{input_host}:{input_port}"
     if add_passphrase and passphrase:
         srt_input += f"?passphrase={passphrase}"
 
-    # 2. Build FFmpeg Flags
     video_flags = ""
     if should_convert:
         if is_interlaced:
             video_flags += f" -vf bwdif=mode={bwdif_mode}"
         
-        # GOP Rounding Logic
-        gop_map = {
-            "60": "60",
-            "60000/1001": "60",
-            "30": "30",
-            "30000/1001": "30",
-            "50": "50",
-            "25": "25"
-        }
+        gop_map = {"60": "60", "60000/1001": "60", "30": "30", "30000/1001": "30", "50": "50", "25": "25"}
         gop_val = gop_map.get(fps_selection, "30")
-
-        # Added -r [exact] and -g [rounded]
         video_flags += f" -vcodec h264_nvenc -s 1920x1080 -rc:v vbr -cq:v 20 -maxrate 15000000 -pix_fmt yuv420p -r {fps_selection} -g {gop_val}"
-        video_flags += f" -acodec {audio_codec} -b:a {audio_bitrate}"
-        
-        if not is_multi_audio:
-            video_flags += " -map v:0 -map a:0?"
-        else:
-            mapping_str = " -map v:0"
-            for i in range(num_audio_tracks):
-                suffix = "?" if i == (num_audio_tracks - 1) else ""
-                mapping_str += f" -map a:{i}{suffix}"
-            video_flags += mapping_str
+    else:
+        video_flags += " -vcodec copy"
+
+    video_flags += f" -acodec {audio_codec} -b:a {audio_bitrate}"
+    
+    if not is_multi_audio:
+        video_flags += " -map v:0 -map a:0"
+    else:
+        mapping_str = " -map v:0"
+        for i in range(int(num_audio_tracks)):
+            mapping_str += f" -map a:{i}"
+        video_flags += mapping_str
 
     ffmpeg_value = video_flags.strip()
-    hls_preview_url = f"https://wowzaprodeus2.blob.core.windows.net/streams/hls/{app_name}/{stream_name}/stream.m3u8"
+    hls_preview_url = f"https://windows.net{app_name}/{stream_name}/stream.m3u8"
 
-    # --- FINAL OUTPUT UI ---
     out_col1, out_col2 = st.columns(2)
-
     with out_col1:
         st.subheader("📄 YAML Configuration")
-        final_yaml = (
-            f"name: {stream_name}\n"
-            f"input: {srt_input}\n"
-            f"ffmpegcommand: {ffmpeg_value}\n"
-            f"outputhls_path: hls/{app_name}/{stream_name}"
-        )
+        final_yaml = f"name: {stream_name}\ninput: {srt_input}\nffmpegcommand: {ffmpeg_value}\noutputhls_path: hls/{app_name}/{stream_name}"
         st.code(final_yaml, language="yaml")
-    
     with out_col2:
         st.subheader("🔗 HLS Playlist Preview")
         st.code(hls_preview_url, language="text")
-
 else:
     st.warning("⚠️ Please fix the naming errors in Section 3.")
