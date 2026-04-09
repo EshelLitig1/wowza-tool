@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 import re
+import json
 
 st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 
@@ -63,11 +64,17 @@ with col2:
     audio_codec = st.text_input("Audio Codec", value="aac")
     audio_bitrate = st.text_input("Audio Bitrate", value="192k")
 
-# --- 3. OUTPUT PATH ---
+# --- 3. OUTPUT PATH & INFO ---
 with col3:
     st.header("3. Output Path")
     app_name = st.text_input("Application name", value="live")
     stream_name = st.text_input("Stream file name", value="stream")
+    
+    st.divider()
+    st.caption("Customer Info")
+    customer_id = st.number_input("Customer ID", value=0, step=1)
+    reason = st.text_input("Reason", value="General Encoding")
+    
     valid_input = bool(app_name and stream_name)
 
 # --- GENERATE COMMAND LOGIC ---
@@ -97,18 +104,36 @@ if valid_input:
 
     ffmpeg_value = " ".join(cmd_parts)
     
-    # FIXED: Using the exact URL template you provided
-    hls_preview_url = f"https://wowzaprodeus2.blob.core.windows.net/streams/hls/{app_name}/{stream_name}/stream.m3u8"
+    # Keep user's manual URL structure
+    hls_preview_url = f"https://wowzaprodeus2.blob.core.windows.net/playlists/hls/{app_name}/{stream_name}/stream.m3u8"
 
     out_col1, out_col2 = st.columns(2)
     with out_col1:
         st.subheader("📄 YAML Configuration")
-        yaml_lines = [f"name: {stream_name}", f"input: {srt_input}"]
-        if should_encode_video or should_encode_audio: yaml_lines.append(f"ffmpegcommand: {ffmpeg_value}")
+        
+        # Build info comment
+        info_dict = {"Customer ID": str(customer_id), "Reason": reason}
+        info_row = f"#{json.dumps(info_dict)}"
+        
+        yaml_lines = [
+            info_row,
+            f"name: {stream_name}",
+            f"input: {srt_input}"
+        ]
+        
+        if should_encode_video or should_encode_audio:
+            yaml_lines.append(f"ffmpegcommand: {ffmpeg_value}")
+            
         yaml_lines.append(f"outputhls_path: hls/{app_name}/{stream_name}")
-        if is_multi_audio: yaml_lines.append(f"outputhls_multiple_audio_count: {int(num_audio_tracks)}")
+        
+        if is_multi_audio:
+            yaml_lines.append(f"outputhls_multiple_audio_count: {int(num_audio_tracks)}")
+            
         st.code("\n".join(yaml_lines), language="yaml")
     
     with out_col2:
         st.subheader("🔗 HLS Playlist Preview")
         st.code(hls_preview_url, language="text")
+
+else:
+    st.warning("⚠️ Please provide Application and Stream names.")
