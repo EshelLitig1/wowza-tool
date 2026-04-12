@@ -1,6 +1,5 @@
 import streamlit as st
 import random
-import re
 import json
 
 st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
@@ -24,24 +23,37 @@ if st.sidebar.button("🎰 Spin the Logos!"):
         st.sidebar.success("🎉 JACKPOT!")
 
 s_col1, s_col2, s_col3 = st.sidebar.columns(3)
-with s_col1: st.image(st.session_state.current_order[0], use_container_width=True)
-with s_col2: st.image(st.session_state.current_order[1], use_container_width=True)
-with s_col3: st.image(st.session_state.current_order[2], use_container_width=True)
+# Note: Ensure these image files exist in your directory or use placeholders
+try:
+    with s_col1: st.image(st.session_state.current_order[0], use_container_width=True)
+    with s_col2: st.image(st.session_state.current_order[1], use_container_width=True)
+    with s_col3: st.image(st.session_state.current_order[2], use_container_width=True)
+except:
+    st.sidebar.write("Upload logo images to play!")
 
 st.sidebar.divider()
 
 # --- MAIN APP ---
 st.title("🎥 FFmpeg Command Generator")
 
+# NEW: Mode Selection Dropdown
+app_mode = st.selectbox("Select Mode", ["Caller", "Listener (no encoding)"])
+
 col1, col2, col3 = st.columns(3)
 
 # --- 1. INPUT SOURCE ---
 with col1:
     st.header("1. Input Source")
-    input_host = st.text_input("Input Host/IP", value="54.156.246.82")
-    input_port = st.text_input("Input Port", value="37301")
-    add_passphrase = st.checkbox("Add passphrase?", value=True)
-    passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
+    
+    if app_mode == "Caller":
+        input_host = st.text_input("Input Host/IP", value="54.156.246.82")
+        input_port = st.text_input("Input Port", value="37301")
+        add_passphrase = st.checkbox("Add passphrase?", value=True)
+        passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
+    else:
+        # Listener (no encoding) Mode
+        st.info("**IP:** 52.242.94.245")
+        listener_port = st.number_input("Port", value=10000, step=1)
 
 # --- 2. ENCODING SETTINGS ---
 with col2:
@@ -81,9 +93,13 @@ with col3:
 st.divider()
 
 if valid_input:
-    srt_input = f"srt://{input_host}:{input_port}"
-    if add_passphrase and passphrase:
-        srt_input += f"?passphrase={passphrase}"
+    # Logic for Input URL based on Mode
+    if app_mode == "Caller":
+        srt_input = f"srt://{input_host}:{input_port}"
+        if add_passphrase and passphrase:
+            srt_input += f"?passphrase={passphrase}"
+    else:
+        srt_input = f"srt://0.0.0.0:{listener_port}"
 
     cmd_parts = []
     if should_encode_video:
@@ -103,15 +119,12 @@ if valid_input:
         cmd_parts.append(f"-map a:{i}")
 
     ffmpeg_value = " ".join(cmd_parts)
-    
-    # Keep user's manual URL structure
-    hls_preview_url = f"https://wowzaprodeus2.blob.core.windows.net/playlists/hls/{app_name}/{stream_name}/stream.m3u8"
+    hls_preview_url = f"https://wowzaprodeus2.blob.core.windows.net/streams/hls/{app_name}/{stream_name}/stream.m3u8"
 
     out_col1, out_col2 = st.columns(2)
     with out_col1:
         st.subheader("📄 YAML Configuration")
         
-        # Build info comment
         info_dict = {"Customer ID": str(customer_id), "Reason": reason}
         info_row = f"#{json.dumps(info_dict)}"
         
@@ -121,13 +134,17 @@ if valid_input:
             f"input: {srt_input}"
         ]
         
+        # New: Add clusterportin if in Listener mode
+        if app_mode == "Listener (no encoding)":
+            yaml_lines.append(f"clusterportin: {listener_port}")
+        
         if should_encode_video or should_encode_audio:
             yaml_lines.append(f"ffmpegcommand: {ffmpeg_value}")
             
         yaml_lines.append(f"outputhls_path: hls/{app_name}/{stream_name}")
         
         if is_multi_audio:
-            yaml_lines.append(f"outputhls_multiple_audio_count: {int(num_audio_tracks)}")
+            yaml_lines.append("outputhls_multiple_audio_count: auto")
             
         st.code("\n".join(yaml_lines), language="yaml")
     
