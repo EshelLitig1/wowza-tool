@@ -32,21 +32,43 @@ st.sidebar.divider()
 
 # --- MAIN APP ---
 st.title("🎥 FFmpeg Command Generator")
+app_mode = st.selectbox("Select Mode", ["Caller (encoding)", "Caller", "Listener (encoding)"])
+
+if app_mode == "Caller (encoding)":
+    repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu/values.yaml"
+elif app_mode == "Caller":
+    repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu/values.yaml"
+else:
+    repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners/values.yaml"
+
+st.markdown(f"🔗 **Reference:** [{repo_url}]({repo_url})")
 
 col1, col2, col3 = st.columns(3)
 
 # --- 1. INPUT SOURCE ---
 with col1:
     st.header("1. Input Source")
-    input_host = st.text_input("Input Host/IP", value="54.156.246.82")
-    input_port = st.text_input("Input Port", value="37301")
-    add_passphrase = st.checkbox("Add passphrase?", value=True)
-    passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
+    if app_mode in ["Caller (encoding)", "Caller"]:
+        input_host = st.text_input("Input Host/IP", value="54.156.246.82")
+        input_port = st.text_input("Input Port", value="37301")
+        add_passphrase = st.checkbox("Add passphrase?", value=True)
+        passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
+        has_static_ip = st.checkbox("Static IP :gray[- 20.98.207.73]")
+    else:
+        input_port = st.text_input("Input Port", value="37301")
+        input_host = ""
+        add_passphrase = False
+        passphrase = ""
+        has_static_ip = False
 
 # --- 2. ENCODING SETTINGS ---
 with col2:
     st.header("2. Encoding")
-    should_encode_video = st.checkbox("Encode video?", value=True, help="Uncheck if the video doesn't need to be converted")
+    
+    if app_mode == "Caller":
+        should_encode_video = st.checkbox("Encode video?", value=False, disabled=True, help="Video encoding is disabled in this mode")
+    else:
+        should_encode_video = st.checkbox("Encode video?", value=True, help="Uncheck if the video doesn't need to be converted")
     
     if should_encode_video:
         is_interlaced = st.checkbox("Is interlaced?", value=True)
@@ -56,7 +78,10 @@ with col2:
         fps_selection = st.selectbox("FPS Value", options=["60", "60000/1001", "30", "30000/1001", "50", "25"], index=3)
     
     st.divider()
-    should_encode_audio = st.checkbox("Encode audio?", value=True)
+    if app_mode == "Caller":
+        should_encode_audio = st.checkbox("Encode audio?", value=False, help="Audio encoding disabled by default in this mode")
+    else:
+        should_encode_audio = st.checkbox("Encode audio?", value=True)
     is_multi_audio = st.checkbox("Is multi audio", value=False)
     num_audio_tracks = 1
     if is_multi_audio:
@@ -81,9 +106,12 @@ with col3:
 st.divider()
 
 if valid_input:
-    srt_input = f"srt://{input_host}:{input_port}"
-    if add_passphrase and passphrase:
-        srt_input += f"?passphrase={passphrase}"
+    if app_mode in ["Caller (encoding)", "Caller"]:
+        srt_input = f"srt://{input_host}:{input_port}"
+        if add_passphrase and passphrase:
+            srt_input += f"?passphrase={passphrase}"
+    else:
+        srt_input = f"srt://0.0.0.0:{input_port}"
 
     cmd_parts = []
     if should_encode_video:
@@ -100,12 +128,13 @@ if valid_input:
 
     cmd_parts.append("-map v:0")
     for i in range(int(num_audio_tracks) if is_multi_audio else 1):
-        cmd_parts.append(f"-map a:{i}")
+        audio_map = f"-map a:{i}?" if is_multi_audio else f"-map a:{i}"
+        cmd_parts.append(audio_map)
 
     ffmpeg_value = " ".join(cmd_parts)
     
     # Keep user's manual URL structure
-    hls_preview_url = f"https://wowzaprodeus2.blob.core.windows.net/playlists/hls/{app_name}/{stream_name}/stream.m3u8"
+    hls_preview_url = f"https://wowzaprodeus2.blob.core.windows.net/streams/hls/{app_name}/{stream_name}/stream.m3u8"
 
     out_col1, out_col2 = st.columns(2)
     with out_col1:
@@ -118,8 +147,15 @@ if valid_input:
         yaml_lines = [
             info_row,
             f"name: {stream_name}",
-            f"input: {srt_input}"
         ]
+        
+        if app_mode == "Listener (encoding)":
+            yaml_lines.append(f"clusterportin: {input_port}")
+            
+        if has_static_ip:
+            yaml_lines.append("staticip: true")
+            
+        yaml_lines.append(f"input: {srt_input}")
         
         if should_encode_video or should_encode_audio:
             yaml_lines.append(f"ffmpegcommand: {ffmpeg_value}")
@@ -127,7 +163,7 @@ if valid_input:
         yaml_lines.append(f"outputhls_path: hls/{app_name}/{stream_name}")
         
         if is_multi_audio:
-            yaml_lines.append(f"outputhls_multiple_audio_count: {int(num_audio_tracks)}")
+            yaml_lines.append("outputhls_multiple_audio_count: auto")
             
         st.code("\n".join(yaml_lines), language="yaml")
     
