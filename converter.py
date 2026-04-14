@@ -32,7 +32,11 @@ st.sidebar.divider()
 
 # --- MAIN APP ---
 st.title("🎥 FFmpeg Command Generator")
-app_mode = st.selectbox("Select Mode", ["Caller (encoding)", "Caller", "Listener (encoding)"])
+app_mode = st.selectbox("Select Mode", ["Caller (encoding)", "Caller", "Listener (encoding)", "Listener"])
+
+if app_mode == "Listener":
+    st.info("No need for FFMPEG. Use Wowza - http://wowza-dashboard.vibecoding.apps:3000 (enable the VPN)")
+    st.stop()
 
 if app_mode == "Caller (encoding)":
     repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu/values.yaml"
@@ -41,7 +45,7 @@ elif app_mode == "Caller":
 else:
     repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners/values.yaml"
 
-st.markdown(f"🔗 **Reference:** [{repo_url}]({repo_url})")
+st.markdown(f"🔗 **YAML URL:** [{repo_url}]({repo_url})")
 
 col1, col2, col3 = st.columns(3)
 
@@ -55,6 +59,8 @@ with col1:
         passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
         has_static_ip = st.checkbox("Static IP :gray[- 20.98.207.73]")
     else:
+        st.info("go to the YAML URL and find the next available port from the 'clusterportin' field")
+        st.markdown("**Inbound IP:** 52.242.94.245")
         input_port = st.text_input("Input Port", value="37301")
         input_host = ""
         add_passphrase = False
@@ -96,7 +102,8 @@ with col3:
     stream_name = st.text_input("Stream file name", value="stream")
     
     st.divider()
-    st.caption("Customer Info")
+    st.caption("Tagging Info")
+    tam = st.text_input("TAM", value="")
     customer_id = st.number_input("Customer ID", value=0, step=1)
     reason = st.text_input("Reason", value="General Encoding")
     
@@ -114,22 +121,30 @@ if valid_input:
         srt_input = f"srt://0.0.0.0:{input_port}"
 
     cmd_parts = []
-    if should_encode_video:
-        if is_interlaced: cmd_parts.append(f"-vf bwdif=mode={bwdif_mode}")
-        gop_map = {"60":"60", "60000/1001":"60", "30":"30", "30000/1001":"30", "50":"50", "25":"25"}
-        cmd_parts.append(f"-vcodec h264_nvenc -s 1920x1080 -rc:v vbr -cq:v 20 -maxrate 15000000 -pix_fmt yuv420p -r {fps_selection} -g {gop_map.get(fps_selection, '30')}")
+    
+    # Custom format for 'Caller' mode with multi-audio
+    if app_mode == "Caller" and is_multi_audio and not should_encode_video and not should_encode_audio:
+        cmd_parts.append("-c copy")
+        cmd_parts.append("-map v:0")
+        for i in range(int(num_audio_tracks)):
+            cmd_parts.append(f"-map a:{i}?")
     else:
-        cmd_parts.append("-vcodec copy")
+        if should_encode_video:
+            if is_interlaced: cmd_parts.append(f"-vf bwdif=mode={bwdif_mode}")
+            gop_map = {"60":"60", "60000/1001":"60", "30":"30", "30000/1001":"30", "50":"50", "25":"25"}
+            cmd_parts.append(f"-vcodec h264_nvenc -s 1920x1080 -rc:v vbr -cq:v 20 -maxrate 15000000 -pix_fmt yuv420p -r {fps_selection} -g {gop_map.get(fps_selection, '30')}")
+        else:
+            cmd_parts.append("-vcodec copy")
 
-    if should_encode_audio:
-        cmd_parts.append(f"-acodec {audio_codec} -b:a {audio_bitrate}")
-    else:
-        cmd_parts.append("-acodec copy")
+        if should_encode_audio:
+            cmd_parts.append(f"-acodec {audio_codec} -b:a {audio_bitrate}")
+        else:
+            cmd_parts.append("-acodec copy")
 
-    cmd_parts.append("-map v:0")
-    for i in range(int(num_audio_tracks) if is_multi_audio else 1):
-        audio_map = f"-map a:{i}?" if is_multi_audio else f"-map a:{i}"
-        cmd_parts.append(audio_map)
+        cmd_parts.append("-map v:0")
+        for i in range(int(num_audio_tracks) if is_multi_audio else 1):
+            audio_map = f"-map a:{i}?" if is_multi_audio else f"-map a:{i}"
+            cmd_parts.append(audio_map)
 
     ffmpeg_value = " ".join(cmd_parts)
     
@@ -141,35 +156,49 @@ if valid_input:
         st.subheader("📄 YAML Configuration")
         
         # Build info comment
-        info_dict = {"Customer ID": str(customer_id), "Reason": reason}
-        info_row = f"#{json.dumps(info_dict)}"
+        info_dict = {"TAM": tam, "Customer ID": str(customer_id), "Reason": reason}
+        info_row = f"  #{json.dumps(info_dict)}"
         
         yaml_lines = [
+            f"- name: {stream_name}",
             info_row,
-            f"name: {stream_name}",
         ]
         
         if app_mode == "Listener (encoding)":
-            yaml_lines.append(f"clusterportin: {input_port}")
+            yaml_lines.append(f"  clusterportin: {input_port}")
             
         if has_static_ip:
-            yaml_lines.append("staticip: true")
+            yaml_lines.append("  staticip: true")
             
-        yaml_lines.append(f"input: {srt_input}")
+        yaml_lines.append(f"  input: {srt_input}")
         
-        if should_encode_video or should_encode_audio:
-            yaml_lines.append(f"ffmpegcommand: {ffmpeg_value}")
+        if should_encode_video or should_encode_audio or (app_mode == "Caller" and is_multi_audio):
+            yaml_lines.append(f"  ffmpegcommand: {ffmpeg_value}")
             
-        yaml_lines.append(f"outputhls_path: hls/{app_name}/{stream_name}")
+        yaml_lines.append(f"  outputhls_path: hls/{app_name}/{stream_name}")
         
         if is_multi_audio:
-            yaml_lines.append("outputhls_multiple_audio_count: auto")
+            yaml_lines.append("  outputhls_multiple_audio_count: auto")
             
         st.code("\n".join(yaml_lines), language="yaml")
     
     with out_col2:
         st.subheader("🔗 HLS Playlist Preview")
         st.code(hls_preview_url, language="text")
+
+    st.divider()
+    st.subheader("🗄️ Automation DB insert")
+    
+    if app_mode == "Caller (encoding)":
+        source_id = f"wsc-ffmpeg-gpu,{stream_name}"
+    elif app_mode == "Caller":
+        source_id = f"wsc-ffmpeg-cpu,{stream_name}"
+    else:
+        source_id = f"wsc-ffmpeg-gpu-listeners,{stream_name}"
+        
+    sql_insert = f"INSERT INTO [wsc-op-streams-us-1].dbo.ExternalUrls (Name, Enabled, Sourcetype, SourceID, Url, CreateTime) VALUES (N'{stream_name}', 0, N'ffmpeg', N'{source_id}', N'{hls_preview_url}', GETUTCDATE());"
+    
+    st.code(sql_insert, language="sql")
 
 else:
     st.warning("⚠️ Please provide Application and Stream names.")
