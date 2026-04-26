@@ -186,19 +186,7 @@ if valid_input:
         st.subheader("🔗 HLS Playlist Preview")
         st.code(hls_preview_url, language="text")
 
-    st.divider()
-    st.subheader("🗄️ Automation DB insert")
-    
-    if app_mode == "Caller (encoding)":
-        source_id = f"wsc-ffmpeg-gpu,{stream_name}"
-    elif app_mode == "Caller":
-        source_id = f"wsc-ffmpeg-cpu,{stream_name}"
-    else:
-        source_id = f"wsc-ffmpeg-gpu-listeners,{stream_name}"
-        
-    sql_insert = f"INSERT INTO [wsc-op-streams-us-1].dbo.ExternalUrls (Name, Enabled, Sourcetype, SourceID, Url, CreateTime) VALUES (N'{stream_name}', 0, N'ffmpeg', N'{source_id}', N'{hls_preview_url}', GETUTCDATE());"
-    
-    st.code(sql_insert, language="sql")
+
 
 else:
     st.warning("⚠️ Please provide Application and Stream names.")
