@@ -1,32 +1,73 @@
 import streamlit as st
-import random
-import re
 import json
 
 st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 
 # --- 🔄 RESET LOGIC ---
 if st.sidebar.button("Sweep 🧹 Clear All Fields"):
-    for key in st.session_state.keys():
+    for key in list(st.session_state.keys()):
         del st.session_state[key]
     st.rerun()
 
-# --- 🎰 THE LOGO GAME ---
-st.sidebar.markdown("### 🎲 Mini Game")
-correct_order = ["logo_top.jpg", "logo_middle.jpg", "logo_bottom.jpg"]
-if "current_order" not in st.session_state:
-    st.session_state.current_order = correct_order.copy()
+# --- 🎮 MINI GAME (TIC-TAC-TOE) ---
+st.sidebar.markdown("### Mini game: Tic‑Tac‑Toe")
 
-if st.sidebar.button("🎰 Spin the Logos!"):
-    random.shuffle(st.session_state.current_order)
-    if st.session_state.current_order == correct_order:
-        st.balloons() 
-        st.sidebar.success("🎉 JACKPOT!")
+if "ttt_board" not in st.session_state:
+    st.session_state.ttt_board = [""] * 9
+if "ttt_player" not in st.session_state:
+    st.session_state.ttt_player = "X"
+if "ttt_status" not in st.session_state:
+    st.session_state.ttt_status = ""
 
-s_col1, s_col2, s_col3 = st.sidebar.columns(3)
-with s_col1: st.image(st.session_state.current_order[0], use_container_width=True)
-with s_col2: st.image(st.session_state.current_order[1], use_container_width=True)
-with s_col3: st.image(st.session_state.current_order[2], use_container_width=True)
+
+def _ttt_winner(board: list[str]) -> str | None:
+    wins = [
+        (0, 1, 2),
+        (3, 4, 5),
+        (6, 7, 8),
+        (0, 3, 6),
+        (1, 4, 7),
+        (2, 5, 8),
+        (0, 4, 8),
+        (2, 4, 6),
+    ]
+    for a, b, c in wins:
+        if board[a] and board[a] == board[b] == board[c]:
+            return board[a]
+    return None
+
+
+def _ttt_play(idx: int) -> None:
+    if st.session_state.ttt_status:
+        return
+    if st.session_state.ttt_board[idx]:
+        return
+    st.session_state.ttt_board[idx] = st.session_state.ttt_player
+    winner = _ttt_winner(st.session_state.ttt_board)
+    if winner:
+        st.session_state.ttt_status = f"{winner} won!"
+        return
+    if all(st.session_state.ttt_board):
+        st.session_state.ttt_status = "Draw!"
+        return
+    st.session_state.ttt_player = "O" if st.session_state.ttt_player == "X" else "X"
+
+
+g1, g2, g3 = st.sidebar.columns(3)
+for i in range(9):
+    col = (g1, g2, g3)[i % 3]
+    label = st.session_state.ttt_board[i] or " "
+    col.button(label, key=f"ttt_{i}", on_click=_ttt_play, args=(i,), use_container_width=True)
+
+if st.session_state.ttt_status:
+    st.sidebar.info(st.session_state.ttt_status)
+else:
+    st.sidebar.caption(f"Turn: {st.session_state.ttt_player}")
+
+if st.sidebar.button("Reset Tic‑Tac‑Toe"):
+    st.session_state.ttt_board = [""] * 9
+    st.session_state.ttt_player = "X"
+    st.session_state.ttt_status = ""
 
 st.sidebar.divider()
 
@@ -38,14 +79,20 @@ if app_mode == "Listener":
     st.info("No need for FFMPEG. Use Wowza - http://wowza-dashboard.vibecoding.apps:3000 (enable the VPN)")
     st.stop()
 
+MODE_INFO = (
+    "There is no need for a Wowza stream file. Just fill in all relevant fields bellow and then copy "
+    'the "YAML Configuration" result to the relevant YAML URL. The pod automation is being added automatically. '
+    "The HLS Playlist Preview holds the ready to use HLS"
+)
+if app_mode in ["Caller (encoding)", "Caller", "Listener (encoding)"]:
+    st.info(MODE_INFO)
+
 if app_mode == "Caller (encoding)":
     repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu/values.yaml"
 elif app_mode == "Caller":
     repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu/values.yaml"
 else:
     repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners/values.yaml"
-
-st.markdown(f"🔗 **YAML URL:** [{repo_url}]({repo_url})")
 
 col1, col2, col3 = st.columns(3)
 
@@ -154,6 +201,7 @@ if valid_input:
     out_col1, out_col2 = st.columns(2)
     with out_col1:
         st.subheader("📄 YAML Configuration")
+        st.markdown(f"🔗 **YAML URL:** [{repo_url}]({repo_url})")
         
         # Build info comment
         info_dict = {"TAM": tam, "Customer ID": str(customer_id), "Reason": reason}
