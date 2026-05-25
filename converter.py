@@ -73,7 +73,10 @@ st.sidebar.divider()
 
 # --- MAIN APP ---
 st.title("🎥 FFmpeg Command Generator")
-app_mode = st.selectbox("Select Mode", ["Caller (encoding)", "Caller", "Listener (encoding)", "Listener"])
+app_mode = st.selectbox(
+    "Select Mode",
+    ["Caller (encoding)", "Caller", "Listener (encoding)", "Listener", "RTMP pull"],
+)
 
 if app_mode == "Listener":
     st.info("No need for FFMPEG. Use Wowza - http://wowza-dashboard.vibecoding.apps:3000 (enable the VPN)")
@@ -84,10 +87,10 @@ MODE_INFO = (
     'the "YAML Configuration" result to the relevant YAML URL. The pod automation is being added automatically. '
     "The HLS Playlist Preview holds the ready to use HLS"
 )
-if app_mode in ["Caller (encoding)", "Caller", "Listener (encoding)"]:
+if app_mode in ["Caller (encoding)", "Caller", "Listener (encoding)", "RTMP pull"]:
     st.info(MODE_INFO)
 
-if app_mode == "Caller (encoding)":
+if app_mode in ["Caller (encoding)", "RTMP pull"]:
     repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu/values.yaml"
 elif app_mode == "Caller":
     repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu/values.yaml"
@@ -111,7 +114,22 @@ with col1:
     st.header("1. Input Source")
     endpoints = []
 
-    if app_mode in ["Caller (encoding)", "Caller"]:
+    if app_mode == "RTMP pull":
+        add_passphrase = False
+        passphrase = ""
+        has_static_ip = False
+
+        for i in range(endpoint_count):
+            container = st.expander(f"Endpoint {i + 1}", expanded=True) if endpoint_count > 1 else st.container()
+            with container:
+                pull_url = st.text_input(
+                    "Complete RTMP pull URL",
+                    value="",
+                    key=f"rtmp_pull_url_{i}",
+                )
+                st.caption("Example: rtmp://125.212.235.78:1935/live/livestream01_xJXA04ny0he0SlbJeeXOBHl0")
+                endpoints.append({"url": pull_url})
+    elif app_mode in ["Caller (encoding)", "Caller"]:
         add_passphrase = st.checkbox("Add passphrase?", value=True)
         passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
         has_static_ip = st.checkbox("Static IP :gray[- 20.98.207.73]")
@@ -190,11 +208,30 @@ with col3:
     customer_id = st.number_input("Customer ID", value=0, step=1)
     reason = st.text_input("Reason", value="General Encoding")
     
-    valid_input = bool(app_name and stream_name)
-    if app_mode in ["Caller (encoding)", "Caller"]:
-        valid_input = valid_input and all(endpoint["host"] and endpoint["port"] for endpoint in endpoints)
+    missing_fields = []
+    if not app_name:
+        missing_fields.append("Application name")
+    if not stream_name:
+        missing_fields.append("Stream file name")
+    if not tam:
+        missing_fields.append("TAM")
+
+    if app_mode == "RTMP pull":
+        for i, endpoint in enumerate(endpoints):
+            if not endpoint["url"]:
+                missing_fields.append(f"Endpoint {i + 1} RTMP pull URL")
+    elif app_mode in ["Caller (encoding)", "Caller"]:
+        for i, endpoint in enumerate(endpoints):
+            if not endpoint["host"]:
+                missing_fields.append(f"Endpoint {i + 1} input host/IP")
+            if not endpoint["port"]:
+                missing_fields.append(f"Endpoint {i + 1} input port")
     else:
-        valid_input = valid_input and all(endpoint["port"] for endpoint in endpoints)
+        for i, endpoint in enumerate(endpoints):
+            if not endpoint["port"]:
+                missing_fields.append(f"Endpoint {i + 1} input port")
+
+    valid_input = not missing_fields
 
 # --- GENERATE COMMAND LOGIC ---
 st.divider()
@@ -243,7 +280,9 @@ if valid_input:
         for i, endpoint in enumerate(endpoints):
             endpoint_stream_name = stream_name if endpoint_count == 1 else f"{stream_name}-{i + 1}"
 
-            if app_mode in ["Caller (encoding)", "Caller"]:
+            if app_mode == "RTMP pull":
+                srt_input = endpoint["url"]
+            elif app_mode in ["Caller (encoding)", "Caller"]:
                 srt_input = f"srt://{endpoint['host']}:{endpoint['port']}"
                 if add_passphrase and passphrase:
                     srt_input += f"?passphrase={passphrase}"
@@ -290,4 +329,4 @@ if valid_input:
 
 
 else:
-    st.warning("⚠️ Please provide Application and Stream names.")
+    st.warning(f"⚠️ Please provide: {', '.join(missing_fields)}.")
