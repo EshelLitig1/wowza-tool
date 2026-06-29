@@ -289,9 +289,6 @@ if valid_input:
             else:
                 srt_input = f"srt://0.0.0.0:{endpoint['port']}"
 
-            if yaml_lines:
-                yaml_lines.append("")
-
             yaml_lines.extend(
                 [
                     f"- name: {endpoint_stream_name}",
