@@ -130,7 +130,7 @@ with col1:
                 st.caption("Example: rtmp://125.212.235.78:1935/live/livestream01_xJXA04ny0he0SlbJeeXOBHl0")
                 endpoints.append({"url": pull_url})
     elif app_mode in ["Caller (encoding)", "Caller"]:
-        add_passphrase = st.checkbox("Add passphrase?", value=True)
+        add_passphrase = st.checkbox("Add passphrase?", value=False)
         passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
         has_static_ip = st.checkbox("Static IP :gray[- 20.98.207.73]")
 
