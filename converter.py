@@ -176,9 +176,9 @@ with col2:
     
     if should_encode_video:
         is_interlaced = st.checkbox("Is interlaced?", value=True)
-        bwdif_mode = 1
+        bwdif_mode = 0
         if is_interlaced:
-            bwdif_mode = st.selectbox("BWDIF/YADIF Mode", options=[0, 1], index=1, help="Mode 0: Standard frame rate. Mode 1: Double frame rate.")
+            bwdif_mode = st.selectbox("BWDIF/YADIF Mode", options=[0, 1], index=0, help="Mode 0: Standard frame rate. Mode 1: Double frame rate.")
         fps_selection = st.selectbox("FPS Value", options=["60", "60000/1001", "30", "30000/1001", "50", "25"], index=3)
     
     st.divider()
