@@ -12,7 +12,7 @@ def _ip_with_copy_button(ip: str) -> None:
     components.html(
         f"""
         <body style="margin:0; padding:0; background:transparent; overflow:visible;">
-            <div style="display:flex; align-items:center; gap:6px; height:32px;">
+            <div style="display:flex; align-items:center; gap:3px; height:32px;">
                 <span style="color:#9ca3af; font-size:0.875rem; white-space:nowrap;">{ip}</span>
                 <button title="Copy to clipboard"
                         onclick="navigator.clipboard.writeText('{ip}'); this.style.opacity='0.4'; setTimeout(() => this.style.opacity='1', 800);"
