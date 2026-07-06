@@ -1,7 +1,22 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import json
 
 st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
+
+STATIC_IP = "20.98.207.73"
+
+
+def _copy_button(text: str, label: str = "Copy") -> None:
+    components.html(
+        f"""
+        <button onclick="navigator.clipboard.writeText('{text}'); this.textContent='Copied!'; setTimeout(() => this.textContent='{label}', 1500);"
+                style="padding:0.35rem 0.65rem; border-radius:0.5rem; border:1px solid rgba(250,250,250,0.2); background:rgba(255,255,255,0.08); color:inherit; cursor:pointer; font-size:0.875rem;">
+            {label}
+        </button>
+        """,
+        height=38,
+    )
 
 # --- 🔄 RESET LOGIC ---
 if st.sidebar.button("Sweep 🧹 Clear All Fields"):
@@ -132,7 +147,11 @@ with col1:
     elif app_mode in ["Caller (encoding)", "Caller"]:
         add_passphrase = st.checkbox("Add passphrase?", value=False)
         passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
-        has_static_ip = st.checkbox("Static IP :gray[- 20.98.207.73]")
+        static_ip_col, copy_col = st.columns([5, 1], vertical_alignment="center")
+        with static_ip_col:
+            has_static_ip = st.checkbox(f"Static IP :gray[- {STATIC_IP}]")
+        with copy_col:
+            _copy_button(STATIC_IP, "Copy IP")
 
         for i in range(endpoint_count):
             container = st.expander(f"Endpoint {i + 1}", expanded=True) if endpoint_count > 1 else st.container()
