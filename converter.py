@@ -7,18 +7,22 @@ st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 STATIC_IP = "20.98.207.73"
 
 
-def _copy_icon_button(ip: str) -> None:
+def _ip_with_copy_button(ip: str) -> None:
+    """Renders the IP text and the copy icon right next to each other, with no gap."""
     components.html(
         f"""
         <body style="margin:0; padding:0; background:transparent; overflow:visible;">
-            <button title="Copy to clipboard"
-                    onclick="navigator.clipboard.writeText('{ip}'); this.style.opacity='0.4'; setTimeout(() => this.style.opacity='1', 800);"
-                    style="padding:0; border:none; background:transparent; cursor:pointer; color:#9ca3af; line-height:0; display:flex; align-items:center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
-            </button>
+            <div style="display:flex; align-items:center; gap:6px; height:32px;">
+                <span style="color:#9ca3af; font-size:0.875rem; white-space:nowrap;">{ip}</span>
+                <button title="Copy to clipboard"
+                        onclick="navigator.clipboard.writeText('{ip}'); this.style.opacity='0.4'; setTimeout(() => this.style.opacity='1', 800);"
+                        style="padding:0; border:none; background:transparent; cursor:pointer; color:#9ca3af; line-height:0; display:flex; align-items:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                </button>
+            </div>
         </body>
         """,
         height=32,
@@ -153,18 +157,13 @@ with col1:
     elif app_mode in ["Caller (encoding)", "Caller"]:
         add_passphrase = st.checkbox("Add passphrase?", value=False)
         passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
-        static_check_col, static_ip_col, static_copy_col = st.columns(
-            [1.15, 1.35, 0.2], gap="small", vertical_alignment="center"
+        static_check_col, static_ip_col = st.columns(
+            [0.55, 1.45], gap="small", vertical_alignment="center"
         )
         with static_check_col:
             has_static_ip = st.checkbox("Static IP")
         with static_ip_col:
-            st.markdown(
-                f'<span style="color:#9ca3af; font-size:0.875rem;">{STATIC_IP}</span>',
-                unsafe_allow_html=True,
-            )
-        with static_copy_col:
-            _copy_icon_button(STATIC_IP)
+            _ip_with_copy_button(STATIC_IP)
 
         for i in range(endpoint_count):
             container = st.expander(f"Endpoint {i + 1}", expanded=True) if endpoint_count > 1 else st.container()
