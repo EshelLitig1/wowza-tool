@@ -10,8 +10,8 @@ STATIC_IP = "20.98.207.73"
 def _static_ip_with_copy(ip: str) -> None:
     components.html(
         f"""
-        <div style="display:flex; align-items:center; gap:4px;">
-            <span style="color:#9ca3af; font-size:0.875rem; line-height:1;">{ip}</span>
+        <div style="display:inline-flex; align-items:center; gap:4px; margin:0; padding:0;">
+            <span style="color:#9ca3af; font-size:0.875rem; line-height:1.2;">{ip}</span>
             <button title="Copy to clipboard"
                     onclick="navigator.clipboard.writeText('{ip}'); this.style.opacity='0.4'; setTimeout(() => this.style.opacity='1', 800);"
                     style="padding:0; border:none; background:transparent; cursor:pointer; color:#9ca3af; line-height:0; display:flex; align-items:center;">
@@ -22,7 +22,7 @@ def _static_ip_with_copy(ip: str) -> None:
             </button>
         </div>
         """,
-        height=24,
+        height=20,
     )
 
 # --- 🔄 RESET LOGIC ---
@@ -154,10 +154,8 @@ with col1:
     elif app_mode in ["Caller (encoding)", "Caller"]:
         add_passphrase = st.checkbox("Add passphrase?", value=False)
         passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
-        static_check_col, static_ip_col = st.columns([1.3, 2], gap="small", vertical_alignment="center")
-        with static_check_col:
+        with st.container(horizontal=True, vertical_alignment="center", gap="small"):
             has_static_ip = st.checkbox("Static IP")
-        with static_ip_col:
             _static_ip_with_copy(STATIC_IP)
 
         for i in range(endpoint_count):
