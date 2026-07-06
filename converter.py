@@ -7,15 +7,22 @@ st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 STATIC_IP = "20.98.207.73"
 
 
-def _copy_button(text: str, label: str = "Copy") -> None:
+def _static_ip_with_copy(ip: str) -> None:
     components.html(
         f"""
-        <button onclick="navigator.clipboard.writeText('{text}'); this.textContent='Copied!'; setTimeout(() => this.textContent='{label}', 1500);"
-                style="padding:0.35rem 0.65rem; border-radius:0.5rem; border:1px solid rgba(250,250,250,0.2); background:rgba(255,255,255,0.08); color:inherit; cursor:pointer; font-size:0.875rem;">
-            {label}
-        </button>
+        <div style="display:flex; align-items:center; gap:4px;">
+            <span style="color:#9ca3af; font-size:0.875rem; line-height:1;">{ip}</span>
+            <button title="Copy to clipboard"
+                    onclick="navigator.clipboard.writeText('{ip}'); this.style.opacity='0.4'; setTimeout(() => this.style.opacity='1', 800);"
+                    style="padding:0; border:none; background:transparent; cursor:pointer; color:#9ca3af; line-height:0; display:flex; align-items:center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            </button>
+        </div>
         """,
-        height=38,
+        height=24,
     )
 
 # --- 🔄 RESET LOGIC ---
@@ -147,11 +154,11 @@ with col1:
     elif app_mode in ["Caller (encoding)", "Caller"]:
         add_passphrase = st.checkbox("Add passphrase?", value=False)
         passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
-        static_ip_col, copy_col = st.columns([5, 1], vertical_alignment="center")
+        static_check_col, static_ip_col = st.columns([1.3, 2], gap="small", vertical_alignment="center")
+        with static_check_col:
+            has_static_ip = st.checkbox("Static IP")
         with static_ip_col:
-            has_static_ip = st.checkbox(f"Static IP :gray[- {STATIC_IP}]")
-        with copy_col:
-            _copy_button(STATIC_IP, "Copy IP")
+            _static_ip_with_copy(STATIC_IP)
 
         for i in range(endpoint_count):
             container = st.expander(f"Endpoint {i + 1}", expanded=True) if endpoint_count > 1 else st.container()
