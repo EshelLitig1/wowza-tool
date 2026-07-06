@@ -7,11 +7,10 @@ st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 STATIC_IP = "20.98.207.73"
 
 
-def _static_ip_with_copy(ip: str) -> None:
+def _copy_icon_button(ip: str) -> None:
     components.html(
         f"""
-        <div style="display:inline-flex; align-items:center; gap:4px; margin:0; padding:0;">
-            <span style="color:#9ca3af; font-size:0.875rem; line-height:1.2;">{ip}</span>
+        <body style="margin:0; padding:0; background:transparent; overflow:visible;">
             <button title="Copy to clipboard"
                     onclick="navigator.clipboard.writeText('{ip}'); this.style.opacity='0.4'; setTimeout(() => this.style.opacity='1', 800);"
                     style="padding:0; border:none; background:transparent; cursor:pointer; color:#9ca3af; line-height:0; display:flex; align-items:center;">
@@ -20,9 +19,9 @@ def _static_ip_with_copy(ip: str) -> None:
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
             </button>
-        </div>
+        </body>
         """,
-        height=20,
+        height=32,
     )
 
 # --- 🔄 RESET LOGIC ---
@@ -154,9 +153,18 @@ with col1:
     elif app_mode in ["Caller (encoding)", "Caller"]:
         add_passphrase = st.checkbox("Add passphrase?", value=False)
         passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
-        with st.container(horizontal=True, vertical_alignment="center", gap="small"):
+        static_check_col, static_ip_col, static_copy_col = st.columns(
+            [1.15, 1.35, 0.2], gap="small", vertical_alignment="center"
+        )
+        with static_check_col:
             has_static_ip = st.checkbox("Static IP")
-            _static_ip_with_copy(STATIC_IP)
+        with static_ip_col:
+            st.markdown(
+                f'<span style="color:#9ca3af; font-size:0.875rem;">{STATIC_IP}</span>',
+                unsafe_allow_html=True,
+            )
+        with static_copy_col:
+            _copy_icon_button(STATIC_IP)
 
         for i in range(endpoint_count):
             container = st.expander(f"Endpoint {i + 1}", expanded=True) if endpoint_count > 1 else st.container()
