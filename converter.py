@@ -5,6 +5,7 @@ import json
 st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 
 STATIC_IP = "20.98.207.73"
+INBOUND_IP = "52.242.94.245"
 
 
 def _ip_with_copy_button(ip: str) -> None:
@@ -103,22 +104,20 @@ app_mode = st.selectbox(
     ["Caller (encoding)", "Caller", "Listener (encoding)", "Listener", "RTMP pull"],
 )
 
-if app_mode == "Listener":
-    st.info("No need for FFMPEG. Use Wowza - http://wowza-dashboard.vibecoding.apps:3000 (enable the VPN)")
-    st.stop()
-
 MODE_INFO = (
     "There is no need for a Wowza stream file. Just fill in all relevant fields bellow and then copy "
     'the "YAML Configuration" result to the relevant YAML URL. The pod automation is being added automatically. '
     "The HLS Playlist Preview holds the ready to use HLS"
 )
-if app_mode in ["Caller (encoding)", "Caller", "Listener (encoding)", "RTMP pull"]:
+if app_mode in ["Caller (encoding)", "Caller", "Listener (encoding)", "Listener", "RTMP pull"]:
     st.info(MODE_INFO)
 
 if app_mode in ["Caller (encoding)", "RTMP pull"]:
     repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu/values.yaml"
 elif app_mode == "Caller":
     repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu/values.yaml"
+elif app_mode == "Listener":
+    repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners/values.yaml"
 else:
     repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners/values.yaml"
 
@@ -181,7 +180,13 @@ with col1:
                 endpoints.append({"host": input_host, "port": input_port})
     else:
         st.info("go to the YAML URL and find the next available port from the 'clusterportin' field")
-        st.markdown("**Inbound IP:** 52.242.94.245")
+        inbound_label_col, inbound_ip_col = st.columns(
+            [0.55, 1.45], gap="small", vertical_alignment="center"
+        )
+        with inbound_label_col:
+            st.markdown("**Inbound IP:**")
+        with inbound_ip_col:
+            _ip_with_copy_button(INBOUND_IP)
         add_passphrase = False
         passphrase = ""
         has_static_ip = False
@@ -200,7 +205,7 @@ with col1:
 with col2:
     st.header("2. Encoding")
     
-    if app_mode == "Caller":
+    if app_mode in ["Caller", "Listener"]:
         should_encode_video = st.checkbox("Encode video?", value=False, disabled=True, help="Video encoding is disabled in this mode")
     else:
         should_encode_video = st.checkbox("Encode video?", value=True, help="Uncheck if the video doesn't need to be converted")
@@ -327,7 +332,7 @@ if valid_input:
                 ]
             )
             
-            if app_mode == "Listener (encoding)":
+            if app_mode in ["Listener (encoding)", "Listener"]:
                 yaml_lines.append(f"  clusterportin: {endpoint['port']}")
                 
             if has_static_ip:
