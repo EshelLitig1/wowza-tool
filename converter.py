@@ -218,11 +218,19 @@ with col2:
         fps_selection = st.selectbox("FPS Value", options=["60", "60000/1001", "30", "30000/1001", "50", "25"], index=3)
     
     st.divider()
-    if app_mode == "Caller":
+    if app_mode in ["Caller", "Listener"]:
         should_encode_audio = st.checkbox("Encode audio?", value=False, help="Audio encoding disabled by default in this mode")
     else:
         should_encode_audio = st.checkbox("Encode audio?", value=True)
-    is_multi_audio = st.checkbox("Is multi audio", value=False)
+    if app_mode == "Listener":
+        is_multi_audio = st.checkbox(
+            "Is multi audio",
+            value=True,
+            disabled=True,
+            help="For this mode there is no need to configure multi audio. It works by default.",
+        )
+    else:
+        is_multi_audio = st.checkbox("Is multi audio", value=False)
     num_audio_tracks = 1
     if is_multi_audio:
         num_audio_tracks = st.number_input("Num of stereo tracks", min_value=1, value=2, step=1)
