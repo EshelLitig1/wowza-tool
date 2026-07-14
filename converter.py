@@ -244,7 +244,7 @@ with col3:
     stream_name_label = "Base stream file name" if endpoint_count > 1 else "Stream file name"
     stream_name = st.text_input(stream_name_label, value="stream")
     if endpoint_count > 1:
-        st.caption(f"Generated stream names: {stream_name}_1 through {stream_name}_{endpoint_count}")
+        st.caption(f"Generated stream names: {stream_name}1 through {stream_name}{endpoint_count}")
     
     st.divider()
     st.caption("Tagging Info")
@@ -322,7 +322,7 @@ if valid_input:
         hls_preview_urls = []
 
         for i, endpoint in enumerate(endpoints):
-            endpoint_stream_name = stream_name if endpoint_count == 1 else f"{stream_name}_{i + 1}"
+            endpoint_stream_name = stream_name if endpoint_count == 1 else f"{stream_name}{i + 1}"
 
             if app_mode == "RTMP pull":
                 srt_input = endpoint["url"]
