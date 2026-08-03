@@ -140,7 +140,6 @@ with col1:
 
     if app_mode == "RTMP pull":
         add_passphrase = False
-        passphrase = ""
         has_static_ip = False
 
         for i in range(endpoint_count):
@@ -155,7 +154,6 @@ with col1:
                 endpoints.append({"url": pull_url})
     elif app_mode in ["Caller (encoding)", "Caller"]:
         add_passphrase = st.checkbox("Add passphrase?", value=False)
-        passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
         static_check_col, static_ip_col = st.columns(
             [0.55, 1.45], gap="small", vertical_alignment="center"
         )
@@ -177,7 +175,12 @@ with col1:
                     value=str(37301 + i),
                     key=f"input_port_{i}",
                 )
-                endpoints.append({"host": input_host, "port": input_port})
+                endpoint_passphrase = (
+                    st.text_input("Passphrase", value="ch301_wsc_y84fmq1", key=f"passphrase_{i}")
+                    if add_passphrase
+                    else ""
+                )
+                endpoints.append({"host": input_host, "port": input_port, "passphrase": endpoint_passphrase})
     else:
         st.info("go to the YAML URL and find the next available port from the 'clusterportin' field")
         inbound_label_col, inbound_ip_col = st.columns(
@@ -188,7 +191,6 @@ with col1:
         with inbound_ip_col:
             _ip_with_copy_button(INBOUND_IP)
         add_passphrase = st.checkbox("Add passphrase?", value=False)
-        passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
         has_static_ip = False
 
         for i in range(endpoint_count):
@@ -199,7 +201,12 @@ with col1:
                     value=str(37301 + i),
                     key=f"listener_input_port_{i}",
                 )
-                endpoints.append({"host": "", "port": input_port})
+                endpoint_passphrase = (
+                    st.text_input("Passphrase", value="ch301_wsc_y84fmq1", key=f"listener_passphrase_{i}")
+                    if add_passphrase
+                    else ""
+                )
+                endpoints.append({"host": "", "port": input_port, "passphrase": endpoint_passphrase})
 
 # --- 2. ENCODING SETTINGS ---
 with col2:
@@ -328,12 +335,12 @@ if valid_input:
                 srt_input = endpoint["url"]
             elif app_mode in ["Caller (encoding)", "Caller"]:
                 srt_input = f"srt://{endpoint['host']}:{endpoint['port']}"
-                if add_passphrase and passphrase:
-                    srt_input += f"?passphrase={passphrase}"
+                if add_passphrase and endpoint.get("passphrase"):
+                    srt_input += f"?passphrase={endpoint['passphrase']}"
             else:
                 srt_input = f"srt://0.0.0.0:{endpoint['port']}"
-                if add_passphrase and passphrase:
-                    srt_input += f"?passphrase={passphrase}"
+                if add_passphrase and endpoint.get("passphrase"):
+                    srt_input += f"?passphrase={endpoint['passphrase']}"
 
             yaml_lines.extend(
                 [
