@@ -187,8 +187,8 @@ with col1:
             st.markdown("**Inbound IP:**")
         with inbound_ip_col:
             _ip_with_copy_button(INBOUND_IP)
-        add_passphrase = False
-        passphrase = ""
+        add_passphrase = st.checkbox("Add passphrase?", value=False)
+        passphrase = st.text_input("Passphrase", value="ch301_wsc_y84fmq1") if add_passphrase else ""
         has_static_ip = False
 
         for i in range(endpoint_count):
@@ -332,6 +332,8 @@ if valid_input:
                     srt_input += f"?passphrase={passphrase}"
             else:
                 srt_input = f"srt://0.0.0.0:{endpoint['port']}"
+                if add_passphrase and passphrase:
+                    srt_input += f"?passphrase={passphrase}"
 
             yaml_lines.extend(
                 [
