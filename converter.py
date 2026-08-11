@@ -117,9 +117,21 @@ if app_mode in ["Caller (encoding)", "RTMP pull"]:
 elif app_mode == "Caller":
     repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu/values.yaml"
 elif app_mode == "Listener":
-    repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners/values.yaml"
+    listener_repo_urls = {
+        "URL1": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners/values.yaml",
+        "URL2": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners2/values.yaml",
+        "URL3": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners3/values.yaml",
+    }
+    selected_url_key = st.selectbox("YAML URL", options=list(listener_repo_urls.keys()))
+    repo_url = listener_repo_urls[selected_url_key]
 else:
-    repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners/values.yaml"
+    listener_repo_urls = {
+        "URL1": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners/values.yaml",
+        "URL2": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners2/values.yaml",
+        "URL3": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners3/values.yaml",
+    }
+    selected_url_key = st.selectbox("YAML URL", options=list(listener_repo_urls.keys()))
+    repo_url = listener_repo_urls[selected_url_key]
 
 endpoint_count = int(
     st.number_input(
