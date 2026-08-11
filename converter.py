@@ -5,7 +5,6 @@ import json
 st.set_page_config(page_title="Wowza Interlaced Converter", layout="wide")
 
 STATIC_IP = "20.98.207.73"
-INBOUND_IP = "52.242.94.245"
 
 
 def _ip_with_copy_button(ip: str) -> None:
@@ -191,13 +190,7 @@ with col1:
                 endpoints.append({"host": input_host, "port": input_port, "passphrase": endpoint_passphrase})
     else:
         st.info("go to the YAML URL and find the next available port from the 'clusterportin' field")
-        inbound_label_col, inbound_ip_col = st.columns(
-            [0.55, 1.45], gap="small", vertical_alignment="center"
-        )
-        with inbound_label_col:
-            st.markdown("**Inbound IP:**")
-        with inbound_ip_col:
-            _ip_with_copy_button(INBOUND_IP)
+        st.info("IP can be found in the choosen YAML")
         add_passphrase = st.checkbox("Add passphrase?", value=False)
         has_static_ip = False
 
