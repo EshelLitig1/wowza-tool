@@ -113,25 +113,21 @@ if app_mode in ["Caller (encoding)", "Caller", "Listener (encoding)", "Listener"
     st.info(MODE_INFO)
 
 if app_mode in ["Caller (encoding)", "RTMP pull"]:
-    repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu/values.yaml"
+    repo_urls = ["https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu/values.yaml"]
 elif app_mode == "Caller":
-    repo_url = "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu/values.yaml"
+    repo_urls = ["https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu/values.yaml"]
 elif app_mode == "Listener":
-    listener_repo_urls = {
-        "URL1": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners/values.yaml",
-        "URL2": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners2/values.yaml",
-        "URL3": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners3/values.yaml",
-    }
-    selected_url_key = st.selectbox("YAML URL", options=list(listener_repo_urls.keys()))
-    repo_url = listener_repo_urls[selected_url_key]
+    repo_urls = [
+        "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners/values.yaml",
+        "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners2/values.yaml",
+        "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners3/values.yaml",
+    ]
 else:
-    listener_repo_urls = {
-        "URL1": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners/values.yaml",
-        "URL2": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners2/values.yaml",
-        "URL3": "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners3/values.yaml",
-    }
-    selected_url_key = st.selectbox("YAML URL", options=list(listener_repo_urls.keys()))
-    repo_url = listener_repo_urls[selected_url_key]
+    repo_urls = [
+        "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners/values.yaml",
+        "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners2/values.yaml",
+        "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners3/values.yaml",
+    ]
 
 endpoint_count = int(
     st.number_input(
@@ -331,7 +327,12 @@ if valid_input:
     out_col1, out_col2 = st.columns(2)
     with out_col1:
         st.subheader("📄 YAML Configuration")
-        st.markdown(f"🔗 **YAML URL:** [{repo_url}]({repo_url})")
+        if len(repo_urls) == 1:
+            st.markdown(f"🔗 **YAML URL:** [{repo_urls[0]}]({repo_urls[0]})")
+        else:
+            st.markdown("🔗 **YAML URLs:**")
+            for idx, url in enumerate(repo_urls, start=1):
+                st.markdown(f"URL{idx}: [{url}]({url})")
         
         # Build info comment
         info_dict = {"TAM": tam, "Customer ID": str(customer_id), "Reason": reason}
