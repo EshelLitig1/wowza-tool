@@ -324,6 +324,10 @@ with col2:
         )
 
     if force_encode_video:
+        st.markdown(
+            "For more info refer to this "
+            "[guide](https://docs.google.com/document/d/1AFLuUBL1dDFA31sCulWO_CjsuQtZsD6jLtZQ1Raiw6s/edit?tab=t.0)"
+        )
         st.caption(
             "Every field you set here is pinned: the wrapper never changes it automatically "
             "and only logs a warning if the input disagrees. Leave a field on Default to let the wrapper decide."
