@@ -205,15 +205,15 @@ elif app_mode == "Caller":
     repo_urls = ["https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu/values.yaml"]
 elif app_mode == "Listener":
     repo_urls = [
-        "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners/values.yaml",
         "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners2/values.yaml",
         "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners3/values.yaml",
+        "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-cpu-listeners4/values.yaml",
     ]
 else:
     repo_urls = [
-        "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners/values.yaml",
         "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners2/values.yaml",
         "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners3/values.yaml",
+        "https://github.com/WSCSportsEngineering/mediaservices-values/blob/main/wsc-ffmpeg-gpu-listeners4/values.yaml",
     ]
 
 endpoint_count = int(
